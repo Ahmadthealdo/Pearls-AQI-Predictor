@@ -1,6 +1,5 @@
 # 🌫️ Pearls AQI Predictor
 
-
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue)](https://www.python.org/)
 [![Audit Status](https://img.shields.io/badge/Audit%20Suite-100%25%20Passed%20(5%2F5)-success)](audit_submission.py)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -16,12 +15,10 @@ An end-to-end, production-grade **MLOps & Real-Time Air Quality Forecasting Syst
 - [Key Features](#-key-features)
 - [Target Geographic Scope](#-target-geographic-scope)
 - [Repository Structure](#-repository-structure)
-- [Quickstart & Installation](#-quickstart--installation)
-- [Usage & Execution](#-usage--execution)
+- [How to Run](#-how-to-run)
 - [Model Evaluation & Benchmarking](#-model-evaluation--benchmarking)
 - [Explainability & Interpretability](#-explainability--interpretability)
 - [Pre-Submission Audit Suite](#-pre-submission-audit-suite)
-- [Docker Deployment](#-docker-deployment)
 - [Continuous Integration & Automated Pipelines](#-continuous-integration--automated-pipelines)
 - [US EPA Air Quality Scale](#-us-epa-air-quality-scale)
 
@@ -41,9 +38,8 @@ graph TD
         FE["Data Cleaning & Temporal Alignments<br/>• Autoregressive Lags (t-1, t-2, t-3, t-6, t-12, t-24)<br/>• Rolling Averages & Standard Deviations (6h, 12h, 24h)<br/>• Meteorological Wind Vector Decompositions (U, V)<br/>• Cyclical Encodings (sin/cos for hour, day, month)"]
     end
 
-    subgraph "3. Dual-Mode Storage Layer (Seamless Fallback)"
-        HW_FS[("Hopsworks Feature Store<br/>(Feature Group: aqi_features)")]
-        LOC_FS[("Local Parquet Storage<br/>data/latest_features.parquet<br/>data/aqi_forecast_features.parquet")]
+    subgraph "3. Persistent Feature Store"
+        LOC_FS[("Parquet Feature Tables<br/>data/latest_features.parquet<br/>data/aqi_forecast_features.parquet")]
     end
 
     subgraph "4. Training & Benchmarking Pipeline (2_training_pipeline.py)"
@@ -53,26 +49,21 @@ graph TD
         SHAP_EXP["Explainability Engine<br/>(SHAP Feature Importance Plot)"]
     end
 
-    subgraph "5. Dual-Mode Model Registry"
-        HW_MR[("Hopsworks Model Registry<br/>(Model Artifacts & Metrics)")]
-        LOC_MR[("Local Model Registry<br/>models/champion_model.pkl<br/>models/scaler.pkl, models/feature_cols.pkl")]
+    subgraph "5. Model Registry"
+        LOC_MR[("Serialized Model Artifacts<br/>models/champion_model.pkl<br/>models/scaler.pkl, models/feature_cols.pkl")]
     end
 
     subgraph "6. Real-Time Application Layer (3_app.py)"
-        DASH["Streamlit Interactive Dashboard<br/>• Dynamic On-Demand Open-Meteo Ingestion (180s TTL)<br/>• 72-Hour Interactive Plotly Forecast Curve<br/>• AQICN Ground Truth Residual Tracking<br/>• Multi-Pollutant Micro-Concentration Gauges<br/>• MLOps Diagnostic & Benchmark Explorer"]
+        DASH["Streamlit Interactive Dashboard<br/>• Dynamic On-Demand Open-Meteo Ingestion (180s TTL)<br/>• 72-Hour Interactive Plotly Forecast Curve<br/>• WAQI Ground Truth Residual Tracking<br/>• Multi-Pollutant Concentration Metrics<br/>• MLOps Diagnostic & Benchmark Explorer"]
     end
 
     OM1 --> FE
     OM2 --> FE
-    FE -->|If HOPSWORKS_API_KEY set| HW_FS
-    FE -->|Default Fallback| LOC_FS
-
+    FE --> LOC_FS
     LOC_FS --> SPLIT
-    HW_FS -.-> SPLIT
     SPLIT --> MODELS --> CHAMP
     CHAMP --> SHAP_EXP
-    CHAMP -->|If HOPSWORKS_API_KEY set| HW_MR
-    CHAMP -->|Default Fallback| LOC_MR
+    CHAMP --> LOC_MR
 
     LOC_MR --> DASH
     LOC_FS --> DASH
@@ -88,16 +79,15 @@ graph TD
 2. **Dynamic Real-Time Multi-City Telemetry**:
    - The Streamlit application features a dynamic telemetry engine (`fetch_city_telemetry`) with 180-second TTL caching, fetching live atmospheric updates on the fly when switching between Pakistani metropolitan hubs.
 3. **WAQI / AQICN Ground-Truth Residual Engine**:
-   - Integrates live physical monitoring station readings via the AQICN API token (`.env`), computing real-time residuals ($Residual = y_{\text{live}} - \hat{y}_{\text{pred}}$) to assess real-world model accuracy against physical ground stations.
+   - Integrates live physical monitoring station readings via the WAQI / AQICN API, computing real-time residuals ($Residual = y_{\text{live}} - \hat{y}_{\text{pred}}$) to assess real-world model accuracy against physical ground stations.
 4. **Leakage-Free MLOps Architecture**:
    - Strictly chronological 75/15/10 train-validation-test split preserving time-series ordering.
    - Robust scaling (`StandardScaler`) fitted strictly on training observations to guarantee zero lookahead bias.
 5. **Multi-Model Tournament**:
    - Trains and compares `Ridge`, `Random_Forest`, and `TensorFlow_DNN` (Multi-Layer Perceptron) architectures.
    - Automatically designates the champion model with the lowest holdout Validation MAE.
-6. **Dual-Mode Persistence (Hopsworks + Local Parquet/Joblib)**:
-   - Full integration with Hopsworks Feature Store & Model Registry.
-   - Autonomous, zero-crash fallback to local high-speed Parquet tables (`data/`) and serialized models (`models/`).
+6. **Persistent Feature Store & Model Registry**:
+   - Versioned, high-speed Parquet feature tables (`data/`) and serialized model weights (`models/`) that run out of the box with zero setup.
 7. **Explainability & Model Transparency**:
    - Global feature importance and SHAP summary visualizations (`models/shap_summary.png`).
 8. **Automated Pre-Submission Audit Suite**:
@@ -126,7 +116,7 @@ The project focuses on three strategic meteorological regions in Pakistan:
 │       ├── feature_pipeline.yml     # Hourly feature extraction CI/CD (cron: '0 * * * *')
 │       └── training_pipeline.yml    # Daily model retraining CI/CD (cron: '0 0 * * *')
 ├── .streamlit/
-│   └── config.toml                  # Streamlit theme & headless production configuration
+│   └── config.toml                  # Streamlit theme & production configuration
 ├── data/
 │   ├── aqi_features.parquet         # 90-day historical engineered feature table
 │   ├── aqi_forecast_features.parquet# 72-hour future feature table
@@ -149,109 +139,59 @@ The project focuses on three strategic meteorological regions in Pakistan:
 ├── verify_system.py                 # End-to-end operational sanity verification script
 ├── generate_final_report.py         # Submissions report compiler (Markdown & HTML)
 ├── main.py                          # Master project CLI orchestrator
-├── Dockerfile                       # Production container definition
-├── docker-compose.yml               # Container deployment orchestration
-├── pyproject.toml                   # Project metadata and packaging specification
+├── pyproject.toml                   # Project metadata specification
 ├── requirements.txt                 # Pinned dependencies
+├── LICENSE                          # MIT License
 └── README.md                        # Documentation
 ```
 
 ---
 
-## ⚡ Quickstart & Installation
+## ⚡ How to Run
 
-### 1. Prerequisites
-- Python 3.10, 3.11, 3.12, or 3.14
-- Git
-- (Optional) Docker & Docker Compose
-
-### 2. Clone the Repository
+### 1. Clone & Setup
 ```bash
 git clone https://github.com/ahmadthealdo/Pearls-AQI-Predictor.git
-cd "AQI Index Project"
-```
+cd Pearls-AQI-Predictor
 
-### 3. Create & Activate Virtual Environment
-```bash
-# Using standard venv
+# Create and activate virtual environment
 python3 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
 
-### 4. Install Dependencies
-```bash
+# Install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 5. Environment Configuration (Optional)
-If you have an AQICN API token or Hopsworks API key, create a `.env` file in the project root:
-```env
-# Optional: WAQI / AQICN API token for live ground-truth comparison
-AQICN_API_TOKEN=your_token_here
-
-# Optional: Hopsworks API key for cloud feature store & registry
-HOPSWORKS_API_KEY=
-HOPSWORKS_PROJECT_NAME=aqi_predictor
-```
-> **Note**: The entire system operates seamlessly in local fallback mode if `.env` is omitted.
-
----
-
-## 🛠️ Usage & Execution
-
-You can orchestrate all tasks using the master CLI `main.py` or invoke individual scripts directly.
-
-### Using the Master CLI (`main.py`)
-
-```bash
-# Show available commands
-python main.py --help
-
-# 1. Run Pre-Submission Audit (5/5 Assertions)
-python main.py audit
-
-# 2. Run Full System Sanity Verification
-python main.py verify
-
-# 3. Extract 90-day features and compute 72-hour forecast
-python main.py feature --city Karachi --past-days 90 --forecast-days 3
-
-# 4. Train multi-model benchmark and register champion
-python main.py train --city Karachi
-
-# 5. Launch the Streamlit Dashboard
-python main.py app
-
-# 6. Generate final submission reports
-python main.py report
-```
-
-### Using Standalone Scripts
-
-#### Step 1: Feature Pipeline
-```bash
-python 1_feature_pipeline.py --city Karachi --past-days 90 --forecast-days 3
-```
-- Fetches 90 days of historical hourly weather + air quality data from Open-Meteo.
-- Computes cyclical time features, wind vector conversions ($u, v$), autoregressive lags, and rolling statistics.
-- Saves Parquet tables to `data/latest_features.parquet` and `data/aqi_forecast_features.parquet`.
-
-#### Step 2: Training Pipeline
-```bash
-python 2_training_pipeline.py --city Karachi
-```
-- Performs chronological 75/15/10 partitioning.
-- Trains `Ridge`, `Random_Forest`, and `TensorFlow_DNN` models.
-- Selects the champion based on Validation MAE.
-- Retrains champion on combined Train + Validation splits and evaluates on Holdout Test partition.
-- Serializes `champion_model.pkl`, `scaler.pkl`, `feature_cols.pkl`, and `shap_summary.png`.
-
-#### Step 3: Streamlit Application
+### 2. Launch the Application
+All pre-computed feature tables and trained champion models are pre-packaged in the repository. Launch the dashboard immediately:
 ```bash
 streamlit run 3_app.py
 ```
-Open `http://localhost:8501` in your browser.
+Open your browser at `http://localhost:8501`.
+
+---
+
+### 3. Run Verification & Pipelines (Optional)
+
+You can run individual pipeline stages or use the master CLI `main.py`:
+
+```bash
+# Run the 5-point pre-submission audit suite
+python audit_submission.py
+
+# Run the end-to-end system verification
+python verify_system.py
+
+# Re-run the feature engineering pipeline (Karachi, 90 days history)
+python 1_feature_pipeline.py --city Karachi --past-days 90 --forecast-days 3
+
+# Re-train models & benchmark architectures (Ridge, Random Forest, DNN)
+python 2_training_pipeline.py --city Karachi
+
+# Or use the master CLI
+python main.py app
+```
 
 ---
 
@@ -311,48 +251,6 @@ python audit_submission.py
   ALL AUDIT CHECKS PASSED PERFECTLY! DELIVERABLES VERIFIED FOR SUBMISSION.
 ===========================================================================
 ```
-
----
-
-## 🐳 Docker Deployment
-
-The application is containerized with production healthchecks and volume bindings.
-
-### Build and Run with Docker Compose
-```bash
-docker-compose up --build -d
-```
-Access the dashboard at `http://localhost:8501`.
-
-### Run via Docker CLI
-```bash
-docker build -t pearls-aqi-predictor:latest .
-docker run -p 8501:8501 --env-file .env pearls-aqi-predictor:latest
-```
-
----
-
-## ☁️ Deployment on Render
-
-This project is pre-configured for one-click deployment on [Render](https://render.com) using the included [`render.yaml`](render.yaml) blueprint or as a manual Web Service:
-
-### Method 1: Automatic Blueprint Deployment
-1. Push your repository to GitHub.
-2. Log in to [Render Dashboard](https://dashboard.render.com/) and click **New +** -> **Blueprint**.
-3. Select this repository. Render automatically reads `render.yaml` and provisions the service.
-
-### Method 2: Manual Web Service Setup
-1. On Render, click **New +** -> **Web Service**.
-2. Connect your GitHub repository.
-3. Configure the following settings:
-   - **Environment**: `Python`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `streamlit run 3_app.py --server.port $PORT --server.address 0.0.0.0`
-4. (Optional) Under **Environment Variables**, add:
-   - `PYTHON_VERSION`: `3.12.0`
-   - `AQICN_API_TOKEN`: `your_token_here`
-   - `HOPSWORKS_API_KEY`: `your_key_here` (optional)
-5. Click **Create Web Service**. Your app will be live on a public Render URL.
 
 ---
 
