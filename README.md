@@ -1,7 +1,6 @@
 # 🌫️ Pearls AQI Predictor
 
-[![Feature Pipeline](https://github.com/10pearls/aqi-predictor/actions/workflows/feature_pipeline.yml/badge.svg)](.github/workflows/feature_pipeline.yml)
-[![Training Pipeline](https://github.com/10pearls/aqi-predictor/actions/workflows/training_pipeline.yml/badge.svg)](.github/workflows/training_pipeline.yml)
+
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue)](https://www.python.org/)
 [![Audit Status](https://img.shields.io/badge/Audit%20Suite-100%25%20Passed%20(5%2F5)-success)](audit_submission.py)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
