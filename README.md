@@ -333,6 +333,30 @@ docker run -p 8501:8501 --env-file .env pearls-aqi-predictor:latest
 
 ---
 
+## ☁️ Deployment on Render
+
+This project is pre-configured for one-click deployment on [Render](https://render.com) using the included [`render.yaml`](render.yaml) blueprint or as a manual Web Service:
+
+### Method 1: Automatic Blueprint Deployment
+1. Push your repository to GitHub.
+2. Log in to [Render Dashboard](https://dashboard.render.com/) and click **New +** -> **Blueprint**.
+3. Select this repository. Render automatically reads `render.yaml` and provisions the service.
+
+### Method 2: Manual Web Service Setup
+1. On Render, click **New +** -> **Web Service**.
+2. Connect your GitHub repository.
+3. Configure the following settings:
+   - **Environment**: `Python`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `streamlit run 3_app.py --server.port $PORT --server.address 0.0.0.0`
+4. (Optional) Under **Environment Variables**, add:
+   - `PYTHON_VERSION`: `3.12.0`
+   - `AQICN_API_TOKEN`: `your_token_here`
+   - `HOPSWORKS_API_KEY`: `your_key_here` (optional)
+5. Click **Create Web Service**. Your app will be live on a public Render URL.
+
+---
+
 ## 🔄 Continuous Integration & Automated Pipelines
 
 Automated GitHub Actions workflows ensure continuous data freshness and drift mitigation:
