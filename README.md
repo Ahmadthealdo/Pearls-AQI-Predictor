@@ -168,7 +168,7 @@ The project focuses on three strategic meteorological regions in Pakistan:
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/10pearls/aqi-predictor.git
+git clone https://github.com/ahmadthealdo/Pearls-AQI-Predictor.git
 cd "AQI Index Project"
 ```
 
