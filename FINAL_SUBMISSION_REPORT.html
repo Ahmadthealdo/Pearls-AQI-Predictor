@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pearls AQI Predictor - Final Submission Report</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #1E293B;
+            background-color: #F8FAFC;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            background: #FFFFFF;
+            padding: 40px 50px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        h1 { color: #1E3A8A; border-bottom: 2px solid #E2E8F0; padding-bottom: 12px; font-size: 2.2rem; }
+        h2 { color: #1E40AF; margin-top: 35px; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px; }
+        h3 { color: #334155; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border: 1px solid #E2E8F0;
+        }
+        th {
+            background-color: #F1F5F9;
+            font-weight: 600;
+        }
+        tr:nth-child(even) { background-color: #F8FAFC; }
+        code {
+            background-color: #F1F5F9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.9em;
+            color: #0F172A;
+        }
+        pre {
+            background-color: #0F172A;
+            color: #F8FAFC;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .badge-champ {
+            background-color: #10B981;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #E2E8F0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌫️ Pearls AQI Predictor — Final Submission Report</h1>
+        <p><strong>10Pearls MLOps Engineering Deliverable</strong> | Evaluation Timestamp: September 06, 2026 - 17:48 UTC</p>
+        <hr>
+
+        <h2>1. Executive Summary & Serverless Architecture</h2>
+        <p>The <strong>Pearls AQI Predictor</strong> is an autonomous, production-grade MLOps system delivering reliable hourly Air Quality Index (AQI) forecasts up to 72 hours in advance using Open-Meteo telemetry and machine learning pipelines with zero-crash local/Hopsworks fallbacks.</p>
+
+        <h2>2. Telemetry & Feature Engineering Specification</h2>
+        <ul>
+            <li><strong>Total Historical Records</strong>: 2,178 hourly samples</li>
+            <li><strong>Temporal Horizon</strong>: 2026-06-08 00:00 UTC to 2026-09-06 17:00 UTC</li>
+            <li><strong>Engineered Dimensions</strong>: 37 predictive attributes</li>
+        </ul>
+
+        <h2>3. Empirical Model Benchmarks & Selection</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Model Architecture</th>
+                    <th>Test MAE</th>
+                    <th>Test RMSE</th>
+                    <th>Test R² Score</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><strong>Ridge</strong></td>
+                    <td>0.202</td>
+                    <td>0.273</td>
+                    <td>0.9921</td>
+                    <td><span class="badge-champ">🏆 Champion</span></td>
+                </tr>
+        
+                <tr>
+                    <td>Random_Forest</td>
+                    <td>0.477</td>
+                    <td>0.736</td>
+                    <td>0.9424</td>
+                    <td>Evaluated</td>
+                </tr>
+        
+                <tr>
+                    <td>TensorFlow_DNN</td>
+                    <td>5.713</td>
+                    <td>6.798</td>
+                    <td>-3.9154</td>
+                    <td>Evaluated</td>
+                </tr>
+        
+            </tbody>
+        </table>
+
+        <h2>4. Explainability & Interpretability (XAI)</h2>
+        <p>Top feature attribution factors influencing the model predictions:</p>
+        <ol>
+    <li><code>rolling_mean_6h_us_aqi</code> (Score: 4.2388)</li>
+<li><code>lag_1h_us_aqi</code> (Score: 3.3888)</li>
+<li><code>rolling_mean_24h_pm2_5</code> (Score: 1.7127)</li>
+<li><code>lag_6h_us_aqi</code> (Score: 1.1470)</li>
+<li><code>lag_2h_us_aqi</code> (Score: 0.8411)</li>
+<li><code>lag_3h_us_aqi</code> (Score: 0.6676)</li>
+<li><code>rolling_mean_24h_us_aqi</code> (Score: 0.4657)</li>
+<li><code>lag_1h_pm2_5</code> (Score: 0.3085)</li>
+
+        </ol>
+        <img src="models/shap_summary.png" alt="SHAP Feature Importance Summary">
+
+        <h2>5. EPA Alert Matrix</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>AQI Range</th>
+                    <th>Category</th>
+                    <th>Advisory</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>0 – 50</td><td>Good</td><td>Air quality is satisfactory; enjoy normal outdoor activities.</td></tr>
+                <tr><td>51 – 100</td><td>Moderate</td><td>Air quality is acceptable; sensitive groups monitor exertion.</td></tr>
+                <tr><td>101 – 150</td><td>Unhealthy for Sensitive</td><td>Sensitive individuals reduce outdoor activity.</td></tr>
+                <tr><td>151 – 200</td><td>Unhealthy</td><td>Wear N95 masks outdoors, keep windows closed, run HEPA filtration.</td></tr>
+                <tr><td>201 – 300</td><td>Very Unhealthy</td><td>Health alert: Avoid all outdoor activity; stay in filtered rooms.</td></tr>
+                <tr><td>301 – 500</td><td>Hazardous</td><td>Emergency conditions: Remain indoors and minimize physical exertion.</td></tr>
+            </tbody>
+        </table>
+
+        <h2>6. Reproducibility Guide</h2>
+        <pre><code># Quickstart
+git clone https://github.com/10pearls/aqi-predictor.git
+cd aqi-predictor
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python 1_feature_pipeline.py --city Karachi
+python 2_training_pipeline.py --city Karachi
+python audit_submission.py
+streamlit run 3_app.py</code></pre>
+    </div>
+</body>
+</html>

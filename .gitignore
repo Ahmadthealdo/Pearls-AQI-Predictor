@@ -1,0 +1,35 @@
+# Byte-compiled / optimized / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# OS and editor artifacts
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs and temporary files
+*.log
+scratch/
+
+# Sensitive environment credentials
+.env
+.env.local
+.env.*.local
+
+
+# Explicitly track required data and model artifacts
+!data/*.parquet
+!data/*.json
+!models/*.pkl
+!models/*.joblib
+!models/*.csv
+!models/*.json
+!models/*.png

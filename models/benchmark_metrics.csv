@@ -1,0 +1,4 @@
+Model,MAE,RMSE,R2
+Ridge,0.202,0.273,0.9921
+Random_Forest,0.477,0.736,0.9424
+TensorFlow_DNN,5.713,6.798,-3.9154

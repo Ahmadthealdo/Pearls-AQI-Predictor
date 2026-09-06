@@ -1,0 +1,45 @@
+name: Training Pipeline
+
+'on':
+  schedule:
+    - cron: '0 0 * * *' # Daily at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  run-training-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install hopsworks || true
+
+      - name: Fetch Latest Feature Data (If needed)
+        run: |
+          python 1_feature_pipeline.py --city Karachi --past-days 90 --forecast-days 3
+
+      - name: Execute Model Training & Evaluation
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+          HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
+        run: |
+          python 2_training_pipeline.py --city Karachi
+
+      - name: Upload Model Artifacts (Fallback Registry)
+        uses: actions/upload-artifact@v4
+        with:
+          name: aqi-champion-model
+          path: models/
+          retention-days: 30
+
